@@ -9,6 +9,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,33 +27,11 @@
           },
           colors: {
             void: '#0a0a0b',
-            charcoal: '#141416',
-            stone: '#1c1c1f',
             warm: '#e6e2dd',
             clay: '#d4cfc7',
             accent: '#c9a87c',
             'accent-hover': '#b8976b',
             muted: '#6b6b6e',
-          },
-          animation: {
-            'fade-up': 'fadeUp 0.8s ease-out forwards',
-            'fade-in': 'fadeIn 1s ease-out forwards',
-            'slide-in': 'slideIn 0.6s ease-out forwards',
-            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-          },
-          keyframes: {
-            fadeUp: {
-              '0%': { opacity: '0', transform: 'translateY(30px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            },
-            fadeIn: {
-              '0%': { opacity: '0' },
-              '100%': { opacity: '1' },
-            },
-            slideIn: {
-              '0%': { opacity: '0', transform: 'translateX(-20px)' },
-              '100%': { opacity: '1', transform: 'translateX(0)' },
-            }
           }
         }
       }
@@ -58,1081 +39,219 @@
   </script>
 
   <style>
-    body { background-color: #0a0a0b; color: #e6e2dd; overflow-x: hidden; }
-    .gradient-text {
-      background: linear-gradient(135deg, #e6e2dd 0%, #c9a87c 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .glass-panel {
-      background: rgba(28, 28, 31, 0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -15px rgba(201, 168, 124, 0.15); }
+    body { background:#0a0a0b; color:#e6e2dd; overflow-x:hidden; }
+    section { scroll-margin-top:100px; }
 
-    .category-card {
-      background: linear-gradient(145deg, rgba(28, 28, 31, 0.8) 0%, rgba(20, 20, 22, 0.9) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.03);
-      transition: all 0.4s ease;
-    }
-    .category-card:hover {
-      border-color: rgba(201, 168, 124, 0.3);
-      background: linear-gradient(145deg, rgba(28, 28, 31, 0.95) 0%, rgba(20, 20, 22, 1) 100%);
-    }
-    .nav-link { position: relative; }
-    .nav-link::after {
-      content: ''; position: absolute; width: 0; height: 1px; bottom: -2px; left: 0;
-      background-color: #c9a87c; transition: width 0.3s ease;
-    }
-    .nav-link:hover::after { width: 100%; }
-
-    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
-    .reveal.active { opacity: 1; transform: translateY(0); }
-
-    .number-display { font-variant-numeric: tabular-nums; }
-
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #0a0a0b; }
-    ::-webkit-scrollbar-thumb { background: #2a2a2d; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #c9a87c; }
-
-    .hero-bg { background: radial-gradient(circle at 50% 50%, rgba(201, 168, 124, 0.03) 0%, transparent 50%); }
-
-    /* Modal */
-    .modal-backdrop { background: rgba(10,10,11,0.7); backdrop-filter: blur(10px); }
-
-    /* Form focus styling */
-    .f-input {
-      background: rgba(28,28,31,0.65);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: #e6e2dd;
-      outline: none;
-    }
-    .f-input:focus {
-      border-color: rgba(201,168,124,0.45);
-      box-shadow: 0 0 0 3px rgba(201,168,124,0.12);
+    .glass {
+      background: rgba(255,255,255,0.045);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.07);
     }
 
-    /* Anchor offset for fixed nav */
-    section { scroll-margin-top: 100px; }
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        rgba(201,168,124,0.4),
+        transparent
+      );
+      margin: 4rem auto;
+      max-width: 800px;
+    }
   </style>
 </head>
 
-<body class="antialiased selection:bg-accent selection:text-void">
+<body class="antialiased">
 
-  <!-- Navigation -->
-  <nav class="fixed w-full z-50 top-0 transition-all duration-300" id="navbar">
-    <div class="glass-panel border-b border-white/5">
-      <div class="max-w-7xl mx-auto px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
-          <div class="flex items-center gap-3 group cursor-pointer" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
-              <i data-lucide="zap" class="w-5 h-5 text-void"></i>
-            </div>
-            <div class="flex flex-col leading-none">
-              <span class="font-display font-bold text-xl tracking-tight text-warm">EqualSpark</span>
-              <span class="text-xs text-muted mt-1">Idea-based science fair</span>
-            </div>
-          </div>
+<!-- NAV -->
+<nav class="fixed w-full z-50 top-0 glass border-b border-white/5">
+  <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+    <div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <div class="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
+        <i data-lucide="zap" class="w-5 h-5 text-void"></i>
+      </div>
+      <span class="font-display font-bold text-xl">EqualSpark</span>
+    </div>
 
-          <div class="hidden md:flex items-center gap-8">
-            <a href="#mission" class="nav-link text-sm font-medium text-clay hover:text-warm transition-colors">Mission</a>
-            <a href="#categories" class="nav-link text-sm font-medium text-clay hover:text-warm transition-colors">Categories</a>
-            <a href="#process" class="nav-link text-sm font-medium text-clay hover:text-warm transition-colors">Process</a>
-            <a href="#deliverables" class="nav-link text-sm font-medium text-clay hover:text-warm transition-colors">Deliverables</a>
-            <a href="#impact" class="nav-link text-sm font-medium text-clay hover:text-warm transition-colors">Impact</a>
+    <div class="hidden md:flex gap-8 text-sm">
+      <a href="#mission" class="hover:text-warm">Mission</a>
+      <a href="#process" class="hover:text-warm">Process</a>
+      <a href="#deliverables" class="hover:text-warm">Deliverables</a>
+      <a href="#impact" class="hover:text-warm">Impact</a>
+    </div>
+  </div>
+</nav>
 
-            <button
-              class="px-6 py-2.5 bg-accent text-void font-semibold text-sm rounded-full hover:bg-accent-hover transition-all duration-300 hover:shadow-lg hover:shadow-accent/20"
-              onclick="openApplyModal()"
-            >
-              Apply Now
-            </button>
-          </div>
+<!-- HERO -->
+<section class="min-h-[85vh] flex items-center justify-center pt-20">
+  <div class="max-w-7xl mx-auto px-6 text-center">
 
-          <button class="md:hidden text-warm" onclick="toggleMobileMenu()">
-            <i data-lucide="menu" class="w-6 h-6"></i>
-          </button>
-        </div>
+    <div class="inline-flex px-4 py-2 rounded-full border border-accent/20 bg-accent/5 mb-6 text-xs text-accent">
+      Grades 7–8 · Solo or teams of up to 3 · No equipment required
+    </div>
+
+    <h1 class="font-display text-5xl md:text-7xl font-bold mb-5">
+      Ideas without barriers.
+    </h1>
+
+    <p class="max-w-2xl mx-auto text-lg text-clay mb-10">
+      A science fair focused on reasoning and creativity rather than resources.
+    </p>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-10">
+      <div>
+        <div class="text-3xl font-bold">$1,000</div>
+        <div class="text-sm text-muted">Maximum microgrant</div>
+      </div>
+      <div>
+        <div class="text-3xl font-bold">6</div>
+        <div class="text-sm text-muted">Idea categories</div>
+      </div>
+      <div>
+        <div class="text-3xl font-bold">0</div>
+        <div class="text-sm text-muted">Builds required</div>
       </div>
     </div>
 
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="hidden md:hidden glass-panel border-b border-white/5">
-      <div class="px-6 py-4 space-y-4">
-        <a href="#mission" class="block text-clay hover:text-warm transition-colors">Mission</a>
-        <a href="#categories" class="block text-clay hover:text-warm transition-colors">Categories</a>
-        <a href="#process" class="block text-clay hover:text-warm transition-colors">Process</a>
-        <a href="#deliverables" class="block text-clay hover:text-warm transition-colors">Deliverables</a>
-        <a href="#impact" class="block text-clay hover:text-warm transition-colors">Impact</a>
-        <button
-          class="w-full px-6 py-2.5 bg-accent text-void font-semibold text-sm rounded-full hover:bg-accent-hover transition-all duration-300"
-          onclick="openApplyModal()"
-        >
-          Apply Now
-        </button>
-      </div>
-    </div>
-  </nav>
+    <a
+      href="https://forms.google.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-3 px-7 py-3.5 rounded-xl
+             bg-accent text-void font-semibold
+             hover:bg-accent-hover transition shadow-lg"
+    >
+      <i data-lucide="upload" class="w-5 h-5"></i>
+      Submit Your Idea
+    </a>
 
-  <!-- Hero Section -->
-  <section class="relative min-h-screen flex items-center justify-center hero-bg pt-20 overflow-hidden">
-    <div class="absolute inset-0 opacity-20">
-      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent/5 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
-    </div>
+  </div>
+</section>
 
-    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 text-center">
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent/20 bg-accent/5 mb-8 animate-fade-in">
-        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-        <span class="text-xs font-medium text-accent tracking-wider uppercase">Grades 7–8 • Team or Solo • Device or Paper</span>
-      </div>
+<div class="section-divider"></div>
 
-      <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 animate-fade-up" style="animation-delay: 0.1s;">
-        Ideas Without<br>
-        <span class="gradient-text">Barriers</span>
-      </h1>
+<!-- MISSION -->
+<section id="mission" class="py-16">
+  <div class="max-w-3xl mx-auto px-6">
+    <h2 class="font-display text-4xl font-bold mb-4">Mission</h2>
 
-      <p class="max-w-2xl mx-auto text-lg md:text-xl text-clay mb-12 leading-relaxed animate-fade-up" style="animation-delay: 0.2s;">
-        Project EqualSpark is an idea-based science fair that judges curiosity, creativity, and critical thinking—not your access to labs, mentors, or funding.
-      </p>
+    <p class="text-clay text-lg leading-relaxed">
+      Many science competitions reward access to funding, lab space, or outside mentorship rather than ideas. Project EqualSpark removes those barriers.
+    </p>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-up" style="animation-delay: 0.3s;">
-        <button class="group px-8 py-4 bg-accent text-void font-semibold rounded-full hover:bg-accent-hover transition-all duration-300 flex items-center gap-2 hover:shadow-xl hover:shadow-accent/20"
-          onclick="openApplyModal()">
-          Start Your Journey
-          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
-        </button>
+    <p class="text-clay text-lg leading-relaxed mt-4">
+      Students are evaluated on their reasoning, hypotheses, and creativity. <br><br> Essentially, they will submit an idea that they have within their field of choosing, and expound their plan to build something to fix a real problem. They are not judged on not equipment or prototypes, creating a fair and accessible space for all students.
+    </p>
+  </div>
+</section>
 
-        <a href="#process" class="px-8 py-4 border border-white/10 text-warm font-medium rounded-full hover:bg-white/5 transition-all duration-300 flex items-center gap-2">
-          <i data-lucide="play-circle" class="w-4 h-4"></i>
-          See How It Works
-        </a>
+<!-- PROCESS -->
+<section id="process" class="py-20">
+  <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+
+    <!-- Roadmap -->
+    <div class="relative">
+      <div class="absolute left-6 top-0 bottom-0 w-px bg-accent/30"></div>
+
+      <div class="relative pl-20 pb-12">
+        <div class="absolute left-0 top-1 w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
+          <i data-lucide="lightbulb" class="w-6 h-6 text-void"></i>
+        </div>
+        <h3 class="font-display text-xl font-semibold mb-1">Choose an idea</h3>
+        <p class="text-clay">Define a question or solution you genuinely care about.</p>
       </div>
 
-      <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto animate-fade-up" style="animation-delay: 0.4s;">
-        <div class="text-center">
-          <div class="text-3xl font-display font-bold text-warm number-display" data-raw="$1000">$1,000</div>
-          <div class="text-sm text-muted mt-1">Microgrants (up to)</div>
+      <div class="relative pl-20 pb-12">
+        <div class="absolute left-0 top-1 w-12 h-12 rounded-xl bg-accent/90 flex items-center justify-center">
+          <i data-lucide="brain" class="w-6 h-6 text-void"></i>
         </div>
-        <div class="text-center">
-          <div class="text-3xl font-display font-bold text-warm number-display" data-raw="6">6</div>
-          <div class="text-sm text-muted mt-1">Idea Categories</div>
+        <h3 class="font-display text-xl font-semibold mb-1">Explain your thinking</h3>
+        <p class="text-clay">Lay out your reasoning, assumptions, and feasibility.</p>
+      </div>
+
+      <div class="relative pl-20">
+        <div class="absolute left-0 top-1 w-12 h-12 rounded-xl bg-accent/80 flex items-center justify-center">
+          <i data-lucide="upload-cloud" class="w-6 h-6 text-void"></i>
         </div>
-        <div class="text-center">
-          <div class="text-3xl font-display font-bold text-warm number-display" data-raw="0">0</div>
-          <div class="text-sm text-muted mt-1">Lab Required</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-display font-bold text-warm number-display" data-raw="100%">100%</div>
-          <div class="text-sm text-muted mt-1">Accessible</div>
-        </div>
+        <h3 class="font-display text-xl font-semibold mb-1">Submit</h3>
+        <p class="text-clay">Writing, slides, or video — polish doesn’t affect scores.</p>
       </div>
     </div>
 
-    <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
-      <i data-lucide="chevron-down" class="w-6 h-6 text-muted"></i>
-    </div>
-  </section>
-
-  <!-- Mission Section -->
-  <section id="mission" class="py-32 relative">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid lg:grid-cols-2 gap-16 items-center">
-        <div class="reveal">
-          <h2 class="font-display text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            Redefining What It Means to <span class="text-accent">Do Science</span>
-          </h2>
-          <p class="text-clay text-lg leading-relaxed mb-8">
-            Traditional science competitions can unintentionally reward access to money, labs, and mentors.
-            Project EqualSpark flips the model—judging ideas, reasoning, and creativity rather than physical builds.
-          </p>
-
-          <div class="space-y-6">
-            <div class="flex gap-4 group">
-              <div class="w-12 h-12 rounded-xl bg-stone flex items-center justify-center flex-shrink-0 group-hover:bg-accent/10 transition-colors">
-                <i data-lucide="scale" class="w-5 h-5 text-accent"></i>
-              </div>
-              <div>
-                <h3 class="font-display font-semibold text-xl mb-2 text-warm">Equity</h3>
-                <p class="text-muted">No participant should need money, lab access, or specialized equipment to compete.</p>
-              </div>
-            </div>
-
-            <div class="flex gap-4 group">
-              <div class="w-12 h-12 rounded-xl bg-stone flex items-center justify-center flex-shrink-0 group-hover:bg-accent/10 transition-colors">
-                <i data-lucide="brain" class="w-5 h-5 text-accent"></i>
-              </div>
-              <div>
-                <h3 class="font-display font-semibold text-xl mb-2 text-warm">Intellectual Merit</h3>
-                <p class="text-muted">Strong reasoning matters more than polish or presentation quality.</p>
-              </div>
-            </div>
-
-            <div class="flex gap-4 group">
-              <div class="w-12 h-12 rounded-xl bg-stone flex items-center justify-center flex-shrink-0 group-hover:bg-accent/10 transition-colors">
-                <i data-lucide="mouse-pointer-click" class="w-5 h-5 text-accent"></i>
-              </div>
-              <div>
-                <h3 class="font-display font-semibold text-xl mb-2 text-warm">Accessibility</h3>
-                <p class="text-muted">Participation should be possible with only a device—or even paper.</p>
-              </div>
-            </div>
-
-            <div class="flex gap-4 group">
-              <div class="w-12 h-12 rounded-xl bg-stone flex items-center justify-center flex-shrink-0 group-hover:bg-accent/10 transition-colors">
-                <i data-lucide="rocket" class="w-5 h-5 text-accent"></i>
-              </div>
-              <div>
-                <h3 class="font-display font-semibold text-xl mb-2 text-warm">Future Opportunity</h3>
-                <p class="text-muted">Winners qualify for up to $1,000 in microgrants to pursue STEM learning.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="relative reveal">
-          <div class="absolute -inset-4 bg-gradient-to-r from-accent/20 to-transparent rounded-3xl blur-2xl opacity-30"></div>
-          <div class="relative glass-panel rounded-3xl p-8 md:p-12 border border-white/5">
-            <div class="flex items-center gap-4 mb-8">
-              <div class="w-3 h-3 rounded-full bg-red-500"></div>
-              <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <div class="w-3 h-3 rounded-full bg-green-500"></div>
-            </div>
-
-            <div class="space-y-6 font-mono text-sm">
-              <div class="flex justify-between items-center pb-4 border-b border-white/5">
-                <span class="text-muted">Grades</span>
-                <span class="text-warm">7–8</span>
-              </div>
-              <div class="flex justify-between items-center pb-4 border-b border-white/5">
-                <span class="text-muted">Participants</span>
-                <span class="text-warm text-right">Individual or teams (up to 3)</span>
-              </div>
-              <div class="flex justify-between items-center pb-4 border-b border-white/5">
-                <span class="text-muted">Priority outreach</span>
-                <span class="text-warm text-right">Title I • Rural/Underserved<br>Community orgs serving low-income youth</span>
-              </div>
-              <div class="flex justify-between items-center pb-4 border-b border-white/5">
-                <span class="text-muted">What we judge</span>
-                <span class="text-warm text-right">Ideas • Reasoning • Creativity</span>
-              </div>
-              <div class="flex justify-between items-center pb-4 border-b border-white/5">
-                <span class="text-muted">What we don’t require</span>
-                <span class="text-warm text-right">Labs • Builds • Equipment</span>
-              </div>
-
-              <div class="pt-4">
-                <div class="text-accent font-semibold mb-2">Eligibility Status: OPEN</div>
-                <div class="w-full bg-stone rounded-full h-2">
-                  <div class="bg-accent h-2 rounded-full" style="width: 100%"></div>
-                </div>
-                <p class="mt-3 text-xs text-muted">
-                  Exact deadlines vary by chapter. If you’re piloting, link the Apply button to your form.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Categories Section -->
-  <section id="categories" class="py-32 bg-charcoal relative overflow-hidden">
-    <div class="absolute inset-0 opacity-30">
-      <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-accent/5 to-transparent"></div>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
-        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">Six Pathways to <span class="gradient-text">Discovery</span></h2>
-        <p class="text-clay text-lg">
-          Choose the category that ignites your curiosity. Each pathway values imagination over infrastructure.
-        </p>
-      </div>
-
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="category-card rounded-2xl p-8 hover-lift cursor-pointer group reveal">
-          <div class="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <i data-lucide="atom" class="w-7 h-7 text-blue-400"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">Scientific Discovery</h3>
-          <p class="text-muted text-sm leading-relaxed mb-4">New hypotheses, unexplained phenomena, or novel research questions.</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Hypothesis</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Research question</span>
-          </div>
-        </div>
-
-        <div class="category-card rounded-2xl p-8 hover-lift cursor-pointer group reveal">
-          <div class="w-14 h-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <i data-lucide="cpu" class="w-7 h-7 text-orange-400"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">Engineering & Technology</h3>
-          <p class="text-muted text-sm leading-relaxed mb-4">Design concepts, systems, or devices solving real-world problems.</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Design</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Tech/app concept</span>
-          </div>
-        </div>
-
-        <div class="category-card rounded-2xl p-8 hover-lift cursor-pointer group reveal">
-          <div class="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <i data-lucide="heart-pulse" class="w-7 h-7 text-red-400"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">Health, Biology & Medicine</h3>
-          <p class="text-muted text-sm leading-relaxed mb-4">Disease prevention, mental health, nutrition, or biological systems.</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Biology</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Wellbeing</span>
-          </div>
-        </div>
-
-        <div class="category-card rounded-2xl p-8 hover-lift cursor-pointer group reveal">
-          <div class="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <i data-lucide="leaf" class="w-7 h-7 text-green-400"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">Environmental & Climate Science</h3>
-          <p class="text-muted text-sm leading-relaxed mb-4">Sustainability, conservation, climate mitigation or adaptation.</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Climate</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Conservation</span>
-          </div>
-        </div>
-
-        <div class="category-card rounded-2xl p-8 hover-lift cursor-pointer group reveal">
-          <div class="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <i data-lucide="users" class="w-7 h-7 text-purple-400"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">Social Science & Human Systems</h3>
-          <p class="text-muted text-sm leading-relaxed mb-4">Psychology, economics, sociology, or data-driven social solutions.</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Data</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Communities</span>
-          </div>
-        </div>
-
-        <div class="category-card rounded-2xl p-8 hover-lift cursor-pointer group reveal">
-          <div class="w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <i data-lucide="sparkles" class="w-7 h-7 text-pink-400"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">Future Science</h3>
-          <p class="text-muted text-sm leading-relaxed mb-4">Speculative but plausible science grounded in known principles.</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Speculative</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs">Plausible</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Accuracy add-on: submission types -->
-      <div class="mt-16 grid lg:grid-cols-2 gap-8 reveal">
-        <div class="glass-panel rounded-3xl p-8 border border-white/5">
-          <h3 class="font-display text-2xl font-bold text-warm mb-4">What Students Can Submit</h3>
-          <p class="text-muted mb-6">Choose one category and submit one of the following idea types:</p>
-          <div class="grid sm:grid-cols-2 gap-3 text-sm">
-            <div class="px-4 py-3 rounded-2xl bg-stone border border-white/5 text-clay">Research question + hypothesis</div>
-            <div class="px-4 py-3 rounded-2xl bg-stone border border-white/5 text-clay">Problem → STEM-based solution</div>
-            <div class="px-4 py-3 rounded-2xl bg-stone border border-white/5 text-clay">Experimental design (not executed)</div>
-            <div class="px-4 py-3 rounded-2xl bg-stone border border-white/5 text-clay">Engineering concept</div>
-            <div class="px-4 py-3 rounded-2xl bg-stone border border-white/5 text-clay">Tech/app concept</div>
-            <div class="px-4 py-3 rounded-2xl bg-stone border border-white/5 text-clay">Environmental or biomedical idea</div>
-          </div>
-        </div>
-
-        <div class="glass-panel rounded-3xl p-8 border border-white/5">
-          <h3 class="font-display text-2xl font-bold text-warm mb-4">Equity Review (Program Evaluation)</h3>
-          <p class="text-muted mb-6">We measure access and outcomes—not just winners.</p>
-          <ul class="space-y-4">
-            <li class="flex items-start gap-3 text-clay">
-              <i data-lucide="map" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
-              <span>Track participation by region and income level</span>
-            </li>
-            <li class="flex items-start gap-3 text-clay">
-              <i data-lucide="clipboard-check" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
-              <span>Student feedback surveys</span>
-            </li>
-            <li class="flex items-start gap-3 text-clay">
-              <i data-lucide="gavel" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
-              <span>Judge feedback and calibration</span>
-            </li>
-            <li class="flex items-start gap-3 text-clay">
-              <i data-lucide="file-text" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
-              <span>Public annual impact report</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Process Section -->
-  <section id="process" class="py-32 relative">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid lg:grid-cols-2 gap-16">
-        <div class="reveal">
-          <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">How It <span class="text-accent">Works</span></h2>
-          <p class="text-clay text-lg mb-12">
-            EqualSpark is idea-based. You explain your thinking and plan—execution and expensive builds are not required.
-          </p>
-
-          <div class="space-y-8">
-            <div class="flex gap-6 group">
-              <div class="flex flex-col items-center">
-                <div class="w-12 h-12 rounded-full bg-accent text-void font-bold flex items-center justify-center text-lg">1</div>
-                <div class="w-0.5 h-full bg-white/10 mt-4 group-last:hidden"></div>
-              </div>
-              <div class="pb-8">
-                <h3 class="font-display text-xl font-bold text-warm mb-2">Pick a category + idea type</h3>
-                <p class="text-muted mb-4">
-                  Choose one of the six categories, then define your submission (question/hypothesis, solution concept, experimental design, etc.).
-                </p>
-                <div class="flex flex-wrap gap-3 text-sm">
-                  <span class="px-3 py-1 rounded-full bg-stone text-clay">Solo or team (up to 3)</span>
-                  <span class="px-3 py-1 rounded-full bg-stone text-clay">Grades 7–8</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex gap-6 group">
-              <div class="flex flex-col items-center">
-                <div class="w-12 h-12 rounded-full bg-stone border border-accent text-accent font-bold flex items-center justify-center text-lg">2</div>
-                <div class="w-0.5 h-full bg-white/10 mt-4"></div>
-              </div>
-              <div class="pb-8">
-                <h3 class="font-display text-xl font-bold text-warm mb-2">Develop your reasoning</h3>
-                <p class="text-muted">
-                  Explain assumptions, variables, constraints, and feasibility. If relevant, describe how you would test or build it—without actually executing.
-                </p>
-              </div>
-            </div>
-
-            <div class="flex gap-6">
-              <div class="flex flex-col items-center">
-                <div class="w-12 h-12 rounded-full bg-stone border border-accent text-accent font-bold flex items-center justify-center text-lg">3</div>
-              </div>
-              <div>
-                <h3 class="font-display text-xl font-bold text-warm mb-2">Submit + get evaluated</h3>
-                <p class="text-muted">
-                  Submit in one of three accessible formats. Judges score scientific thinking, creativity, feasibility, impact, and clarity.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="lg:pl-12 reveal">
-          <div class="sticky top-32">
-            <h3 class="font-display text-2xl font-bold mb-8 text-center">Judging Criteria</h3>
-
-            <div class="space-y-6">
-              <div class="group">
-                <div class="flex justify-between mb-2">
-                  <span class="font-medium text-warm flex items-center gap-2">
-                    <i data-lucide="microscope" class="w-4 h-4 text-accent"></i>
-                    Scientific thinking
-                  </span>
-                  <span class="text-accent font-bold">30%</span>
-                </div>
-                <div class="h-2 bg-stone rounded-full overflow-hidden">
-                  <div class="h-full bg-accent w-[30%] group-hover:w-[35%] transition-all duration-500"></div>
-                </div>
-              </div>
-
-              <div class="group">
-                <div class="flex justify-between mb-2">
-                  <span class="font-medium text-warm flex items-center gap-2">
-                    <i data-lucide="lightbulb" class="w-4 h-4 text-accent"></i>
-                    Creativity & originality
-                  </span>
-                  <span class="text-accent font-bold">25%</span>
-                </div>
-                <div class="h-2 bg-stone rounded-full overflow-hidden">
-                  <div class="h-full bg-accent w-[25%] group-hover:w-[30%] transition-all duration-500"></div>
-                </div>
-              </div>
-
-              <div class="group">
-                <div class="flex justify-between mb-2">
-                  <span class="font-medium text-warm flex items-center gap-2">
-                    <i data-lucide="check-circle" class="w-4 h-4 text-accent"></i>
-                    Feasibility
-                  </span>
-                  <span class="text-accent font-bold">20%</span>
-                </div>
-                <div class="h-2 bg-stone rounded-full overflow-hidden">
-                  <div class="h-full bg-accent w-[20%] group-hover:w-[25%] transition-all duration-500"></div>
-                </div>
-              </div>
-
-              <div class="group">
-                <div class="flex justify-between mb-2">
-                  <span class="font-medium text-warm flex items-center gap-2">
-                    <i data-lucide="globe" class="w-4 h-4 text-accent"></i>
-                    Social / real-world impact
-                  </span>
-                  <span class="text-accent font-bold">15%</span>
-                </div>
-                <div class="h-2 bg-stone rounded-full overflow-hidden">
-                  <div class="h-full bg-accent w-[15%] group-hover:w-[20%] transition-all duration-500"></div>
-                </div>
-              </div>
-
-              <div class="group">
-                <div class="flex justify-between mb-2">
-                  <span class="font-medium text-warm flex items-center gap-2">
-                    <i data-lucide="message-square" class="w-4 h-4 text-accent"></i>
-                    Communication clarity
-                  </span>
-                  <span class="text-accent font-bold">10%</span>
-                </div>
-                <div class="h-2 bg-stone rounded-full overflow-hidden">
-                  <div class="h-full bg-accent w-[10%] group-hover:w-[15%] transition-all duration-500"></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-12 p-6 rounded-2xl bg-stone border border-white/5">
-              <div class="flex items-start gap-4">
-                <i data-lucide="info" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
-                <p class="text-sm text-clay leading-relaxed">
-                  <strong class="text-warm">Note:</strong> Submissions are judged on thinking—not production value.
-                  Microgrants (up to $1,000) must be used for learning/creation in the student’s field.
-                  Parents/guardians must provide receipts for purchases.
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Deliverables Section (accuracy expansion) -->
-  <section id="deliverables" class="py-32 bg-charcoal relative">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
-        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">Submission <span class="gradient-text">Deliverables</span></h2>
-        <p class="text-clay text-lg">Pick the format that best fits your strengths. Keep it clear and honest.</p>
-      </div>
-
-      <div class="grid lg:grid-cols-3 gap-6">
-        <div class="glass-panel rounded-2xl p-8 hover-lift reveal">
-          <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
-            <i data-lucide="file-text" class="w-7 h-7 text-accent"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">1–2 page proposal</h3>
-          <p class="text-muted text-sm leading-relaxed mb-5">Explain your idea, reasoning, and how you’d test or develop it.</p>
-          <div class="space-y-2 text-sm text-clay">
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Clear question or problem</span></div>
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Reasoning + assumptions</span></div>
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Feasibility path</span></div>
-          </div>
-        </div>
-
-        <div class="glass-panel rounded-2xl p-8 hover-lift reveal">
-          <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
-            <i data-lucide="presentation" class="w-7 h-7 text-accent"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">3–5 slide deck</h3>
-          <p class="text-muted text-sm leading-relaxed mb-5">A concise story: what, why it matters, and how it could work.</p>
-          <div class="space-y-2 text-sm text-clay">
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>One big idea per slide</span></div>
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Simple visuals welcome</span></div>
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Impact + feasibility</span></div>
-          </div>
-        </div>
-
-        <div class="glass-panel rounded-2xl p-8 hover-lift reveal">
-          <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
-            <i data-lucide="video" class="w-7 h-7 text-accent"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">3-minute pitch</h3>
-          <p class="text-muted text-sm leading-relaxed mb-5">Explain your idea clearly. Phone video is totally fine.</p>
-          <div class="space-y-2 text-sm text-clay">
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>What problem or question?</span></div>
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>How would it work?</span></div>
-            <div class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Why does it matter?</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-10 glass-panel rounded-3xl p-8 border border-white/5 reveal">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div>
-            <h3 class="font-display text-2xl font-bold text-warm mb-2">Need a structure?</h3>
-            <p class="text-muted">Use the quick template: <span class="text-clay">Problem/Question → Idea → Reasoning → Feasibility → Impact</span>.</p>
-          </div>
-          <button class="px-8 py-4 bg-accent text-void font-semibold rounded-full hover:bg-accent-hover transition-all duration-300 hover:shadow-xl hover:shadow-accent/20"
-            onclick="openApplyModal()">
-            Apply / Submit
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Impact Section (expanded and accurate: long-term vision + evaluation) -->
-  <section id="impact" class="py-32 bg-charcoal relative">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-16 reveal">
-        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">Building the <span class="gradient-text">Future</span></h2>
-        <p class="text-clay text-lg">Transparent equity evaluation today. Scalable chapters and recognition tomorrow.</p>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-8 mb-16">
-        <div class="glass-panel rounded-2xl p-8 text-center hover-lift reveal">
-          <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <i data-lucide="map-pin" class="w-8 h-8 text-accent"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">District & National Chapters</h3>
-          <p class="text-muted text-sm">A model designed to scale across districts and eventually nationwide.</p>
-        </div>
-
-        <div class="glass-panel rounded-2xl p-8 text-center hover-lift reveal">
-          <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <i data-lucide="handshake" class="w-8 h-8 text-accent"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">University + Nonprofit Partnerships</h3>
-          <p class="text-muted text-sm">Partnership pathways for mentorship, credibility, and opportunity.</p>
-        </div>
-
-        <div class="glass-panel rounded-2xl p-8 text-center hover-lift reveal">
-          <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <i data-lucide="award" class="w-8 h-8 text-accent"></i>
-          </div>
-          <h3 class="font-display text-xl font-bold mb-3 text-warm">College Recognition</h3>
-          <p class="text-muted text-sm">Working toward recognition as a legitimate academic competition.</p>
-        </div>
-      </div>
-
-      <div class="glass-panel rounded-3xl p-8 md:p-12 border border-white/5 reveal">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h3 class="font-display text-2xl font-bold mb-4 text-warm">Program Evaluation & Equity Review</h3>
-            <ul class="space-y-4">
-              <li class="flex items-center gap-3 text-clay">
-                <i data-lucide="check" class="w-5 h-5 text-accent flex-shrink-0"></i>
-                <span>Participation tracking by region and income level</span>
-              </li>
-              <li class="flex items-center gap-3 text-clay">
-                <i data-lucide="check" class="w-5 h-5 text-accent flex-shrink-0"></i>
-                <span>Student feedback surveys</span>
-              </li>
-              <li class="flex items-center gap-3 text-clay">
-                <i data-lucide="check" class="w-5 h-5 text-accent flex-shrink-0"></i>
-                <span>Judge feedback + rubric calibration</span>
-              </li>
-              <li class="flex items-center gap-3 text-clay">
-                <i data-lucide="check" class="w-5 h-5 text-accent flex-shrink-0"></i>
-                <span>Public annual impact report</span>
-              </li>
-            </ul>
-
-            <div class="mt-8 p-5 rounded-2xl bg-stone border border-white/5">
-              <div class="flex items-start gap-3">
-                <i data-lucide="lock" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
-                <p class="text-sm text-clay leading-relaxed">
-                  We keep the focus on ideas. Your submission is evaluated on the rubric—no special equipment required.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="relative">
-            <div class="aspect-square rounded-2xl bg-stone flex items-center justify-center relative overflow-hidden">
-              <div class="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent"></div>
-              <div class="text-center z-10 px-8">
-                <div class="text-5xl md:text-6xl font-display font-bold text-accent mb-2">Annual</div>
-                <div class="text-muted uppercase tracking-widest text-sm">Impact Report</div>
-
-                <button
-                  class="mt-6 px-6 py-3 border border-accent/30 text-accent rounded-full text-sm font-medium hover:bg-accent/10 transition-colors flex items-center gap-2 mx-auto"
-                  onclick="downloadImpactReport()"
-                >
-                  <i data-lucide="download" class="w-4 h-4"></i>
-                  Download PDF
-                </button>
-
-                <p class="mt-4 text-xs text-muted">
-                  Hook this to your real PDF link when ready.
-                </p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="py-32 relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-accent/5 to-transparent"></div>
-    <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center relative z-10 reveal">
-      <h2 class="font-display text-4xl md:text-6xl font-bold mb-6 leading-tight">
-        Your Idea Could Change<br>Everything
+    <!-- Scoring -->
+    <div>
+      <h2 class="font-display text-4xl font-bold mb-6">
+        How submissions are scored
       </h2>
-      <p class="text-xl text-clay mb-12 max-w-2xl mx-auto">
-        No lab? No problem. All you need is curiosity and the courage to ask “what if?”
-      </p>
-
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-        <button
-          class="px-10 py-5 bg-accent text-void font-bold text-lg rounded-full hover:bg-accent-hover transition-all duration-300 hover:shadow-2xl hover:shadow-accent/20 hover:-translate-y-1"
-          onclick="openApplyModal()"
-        >
-          Apply / Submit to EqualSpark
-        </button>
-        <a
-          href="#footer"
-          class="px-10 py-5 border border-white/10 text-warm font-medium rounded-full hover:bg-white/5 transition-all duration-300"
-        >
-          Contact Our Team
-        </a>
-      </div>
-
-      <p class="mt-8 text-sm text-muted">
-        Tip: If you have fixed dates, replace this line. Otherwise keep it chapter-based.
-      </p>
+      <canvas id="judgingPie"></canvas>
     </div>
-  </section>
 
-  <!-- Footer -->
-  <footer id="footer" class="border-t border-white/5 bg-void py-16">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid md:grid-cols-4 gap-12 mb-12">
-        <div class="col-span-2">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-              <i data-lucide="zap" class="w-5 h-5 text-void"></i>
-            </div>
-            <span class="font-display font-bold text-xl text-warm">EqualSpark</span>
-          </div>
-          <p class="text-muted max-w-sm leading-relaxed">
-            Project EqualSpark democratizes STEM opportunity by valuing ideas over resources—and funding the next step with microgrants.
-          </p>
-
-          <div class="mt-6 flex gap-3">
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs border border-white/5">Grades 7–8</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs border border-white/5">Teams up to 3</span>
-            <span class="px-3 py-1 rounded-full bg-stone text-clay text-xs border border-white/5">Idea-first</span>
-          </div>
-        </div>
-
-        <div>
-          <h4 class="font-display font-semibold text-warm mb-4">Program</h4>
-          <ul class="space-y-3 text-sm text-muted">
-            <li><a href="#mission" class="hover:text-accent transition-colors">Mission</a></li>
-            <li><a href="#categories" class="hover:text-accent transition-colors">Categories</a></li>
-            <li><a href="#process" class="hover:text-accent transition-colors">Process</a></li>
-            <li><a href="#deliverables" class="hover:text-accent transition-colors">Deliverables</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 class="font-display font-semibold text-warm mb-4">Connect</h4>
-          <ul class="space-y-3 text-sm text-muted">
-            <li><a href="#" class="hover:text-accent transition-colors" onclick="openContactModal(); return false;">Contact</a></li>
-            <li><a href="#" class="hover:text-accent transition-colors" onclick="openPartnerModal(); return false;">Partner With Us</a></li>
-            <li><a href="#" class="hover:text-accent transition-colors" onclick="downloadImpactReport(); return false;">Annual Report</a></li>
-            <li><a href="#" class="hover:text-accent transition-colors" onclick="openPolicyModal(); return false;">Scholarship Policy</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-        <p class="text-sm text-muted">© <span id="year"></span> Project EqualSpark. All rights reserved.</p>
-        <div class="flex gap-6">
-          <a href="#" class="text-muted hover:text-accent transition-colors" aria-label="Twitter"><i data-lucide="twitter" class="w-5 h-5"></i></a>
-          <a href="#" class="text-muted hover:text-accent transition-colors" aria-label="LinkedIn"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
-          <a href="#" class="text-muted hover:text-accent transition-colors" aria-label="Instagram"><i data-lucide="instagram" class="w-5 h-5"></i></a>
-          <a href="#" class="text-muted hover:text-accent transition-colors" aria-label="Email"><i data-lucide="mail" class="w-5 h-5"></i></a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- APPLY MODAL -->
-  <div id="applyModal" class="fixed inset-0 hidden items-center justify-center z-[9999]">
-    <div class="absolute inset-0 modal-backdrop" onclick="closeApplyModal()"></div>
-
-    <div class="relative w-[92%] max-w-2xl glass-panel rounded-3xl border border-white/10 p-6 md:p-8">
-      <div class="flex items-start justify-between gap-6">
-        <div>
-          <h3 class="font-display text-2xl md:text-3xl font-bold text-warm">Apply / Submit</h3>
-          <p class="mt-2 text-sm text-clay">
-            EqualSpark is idea-based. No builds required. Use this as a quick application portal placeholder—swap with your real form link.
-          </p>
-        </div>
-        <button class="text-muted hover:text-warm transition-colors" onclick="closeApplyModal()" aria-label="Close">
-          <i data-lucide="x" class="w-6 h-6"></i>
-        </button>
-      </div>
-
-      <div class="mt-6 grid md:grid-cols-2 gap-4">
-        <div class="rounded-2xl bg-stone/60 border border-white/5 p-4">
-          <h4 class="font-display font-semibold text-warm">Eligibility</h4>
-          <ul class="mt-3 space-y-2 text-sm text-clay">
-            <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Grades 7–8</span></li>
-            <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Solo or team (up to 3)</span></li>
-            <li class="flex gap-2"><i data-lucide="check" class="w-4 h-4 text-accent mt-0.5"></i><span>Device or paper is enough</span></li>
-          </ul>
-        </div>
-
-        <div class="rounded-2xl bg-stone/60 border border-white/5 p-4">
-          <h4 class="font-display font-semibold text-warm">Deliverables</h4>
-          <ul class="mt-3 space-y-2 text-sm text-clay">
-            <li class="flex gap-2"><i data-lucide="file-text" class="w-4 h-4 text-accent mt-0.5"></i><span>1–2 page proposal</span></li>
-            <li class="flex gap-2"><i data-lucide="presentation" class="w-4 h-4 text-accent mt-0.5"></i><span>3–5 slide deck</span></li>
-            <li class="flex gap-2"><i data-lucide="video" class="w-4 h-4 text-accent mt-0.5"></i><span>3-minute recorded pitch</span></li>
-          </ul>
-        </div>
-      </div>
-
-      <form class="mt-6 space-y-4" onsubmit="return fakeSubmit(event)">
-        <div class="grid md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-sm text-clay">Student name</label>
-            <input class="mt-2 w-full rounded-2xl px-4 py-3 f-input" placeholder="First + Last" required />
-          </div>
-          <div>
-            <label class="text-sm text-clay">Grade</label>
-            <select class="mt-2 w-full rounded-2xl px-4 py-3 f-input" required>
-              <option value="" disabled selected>Select</option>
-              <option>7</option>
-              <option>8</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="text-sm text-clay">Category</label>
-          <select class="mt-2 w-full rounded-2xl px-4 py-3 f-input" required>
-            <option value="" disabled selected>Select a category</option>
-            <option>Scientific Discovery</option>
-            <option>Engineering & Technology</option>
-            <option>Health, Biology & Medicine</option>
-            <option>Environmental & Climate Science</option>
-            <option>Social Science & Human Systems</option>
-            <option>Future Science</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-sm text-clay">Deliverable format</label>
-          <select class="mt-2 w-full rounded-2xl px-4 py-3 f-input" required>
-            <option value="" disabled selected>Select a format</option>
-            <option>1–2 page written proposal</option>
-            <option>3–5 slide deck</option>
-            <option>3-minute recorded pitch</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-sm text-clay">Short idea summary</label>
-          <textarea class="mt-2 w-full rounded-2xl px-4 py-3 f-input min-h-[120px]" placeholder="In 3–6 sentences: what’s your question or problem, what’s your idea, and why does it matter?" required></textarea>
-          <p class="mt-2 text-xs text-muted">This form is a placeholder. Replace with your real submission portal or upload flow.</p>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between pt-2">
-          <button type="submit" class="px-8 py-4 bg-accent text-void font-semibold rounded-full hover:bg-accent-hover transition-all duration-300 hover:shadow-xl hover:shadow-accent/20">
-            Save Application (Demo)
-          </button>
-          <button type="button" class="px-8 py-4 border border-white/10 text-warm font-medium rounded-full hover:bg-white/5 transition-all duration-300"
-            onclick="openExternalForm()">
-            Link to Real Form
-          </button>
-        </div>
-      </form>
-    </div>
   </div>
+</section>
 
-  <!-- CONTACT / PARTNER / POLICY simple modals (lightweight) -->
-  <div id="infoModal" class="fixed inset-0 hidden items-center justify-center z-[9998]">
-    <div class="absolute inset-0 modal-backdrop" onclick="closeInfoModal()"></div>
-    <div class="relative w-[92%] max-w-xl glass-panel rounded-3xl border border-white/10 p-6 md:p-8">
-      <div class="flex items-start justify-between gap-6">
-        <div>
-          <h3 id="infoTitle" class="font-display text-2xl font-bold text-warm">Info</h3>
-          <p id="infoBody" class="mt-2 text-sm text-clay"></p>
-        </div>
-        <button class="text-muted hover:text-warm transition-colors" onclick="closeInfoModal()" aria-label="Close">
-          <i data-lucide="x" class="w-6 h-6"></i>
-        </button>
+<!-- DELIVERABLES -->
+<section id="deliverables" class="py-16">
+  <div class="max-w-7xl mx-auto px-6 text-center">
+    <h2 class="font-display text-4xl font-bold mb-10">
+      What students submit
+    </h2>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="glass p-7 rounded-2xl">
+        <p class="font-medium">1–2 page written explanation</p>
       </div>
-      <div class="mt-6">
-        <button class="px-8 py-3 bg-accent text-void font-semibold rounded-full hover:bg-accent-hover transition-all duration-300"
-          onclick="closeInfoModal()">
-          Got it
-        </button>
+      <div class="glass p-7 rounded-2xl">
+        <p class="font-medium">3–5 slide presentation</p>
+      </div>
+      <div class="glass p-7 rounded-2xl">
+        <p class="font-medium">Up to 3-minute recorded explanation</p>
       </div>
     </div>
   </div>
+</section>
 
-  <script>
-    // Initialize icons
-    lucide.createIcons();
+<div class="section-divider"></div>
 
-    // Footer year
-    document.getElementById('year').textContent = new Date().getFullYear();
+<!-- IMPACT -->
+<section id="impact" class="py-16">
+  <div class="max-w-3xl mx-auto px-6">
+    <h2 class="font-display text-4xl font-bold mb-4">
+      Long-term direction
+    </h2>
+    <p class="text-clay text-lg">
+      EqualSpark is built to scale across schools and districts, with participation
+      data and outcomes reviewed and shared publicly.
+    </p>
+  </div>
+</section>
 
-    // Mobile menu toggle
-    function toggleMobileMenu() {
-      const menu = document.getElementById('mobile-menu');
-      menu.classList.toggle('hidden');
-    }
+<!-- FOOTER -->
+<footer class="border-t border-white/5 py-10 text-center text-sm text-muted">
+  © <span id="year"></span> Project EqualSpark
+</footer>
 
-    // Navbar shadow on scroll
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      if (window.pageYOffset > 100) navbar.classList.add('shadow-lg','shadow-black/20');
-      else navbar.classList.remove('shadow-lg','shadow-black/20');
-    });
+<script>
+  lucide.createIcons();
+  document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Reveal animations
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-
-    // Smooth scroll for anchor links (and close mobile menu)
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        const href = this.getAttribute('href');
-        if (!href || href === '#') return;
-        e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          document.getElementById('mobile-menu').classList.add('hidden');
-        }
-      });
-    });
-
-    // Count-up numbers (handles $, %, and plain numbers) using data-raw
-    function animateValue(el, start, end, duration, formatter) {
-      let startTimestamp = null;
-      const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const value = Math.floor(progress * (end - start) + start);
-        el.textContent = formatter ? formatter(value) : value;
-        if (progress < 1) window.requestAnimationFrame(step);
-      };
-      window.requestAnimationFrame(step);
-    }
-
-    const numberObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-
-        const el = entry.target;
-        const raw = el.getAttribute('data-raw') || el.textContent.trim();
-
-        // If raw includes %, keep % after count
-        if (raw.includes('%')) {
-          const num = parseInt(raw.replace(/[^0-9]/g, ''), 10) || 0;
-          animateValue(el, 0, num, 1800, (v) => `${v}%`);
-        }
-        // If raw includes $, keep $ and commas
-        else if (raw.includes('$')) {
-          const num = parseInt(raw.replace(/[^0-9]/g, ''), 10) || 0;
-          animateValue(el, 0, num, 1800, (v) => '$' + v.toLocaleString());
-        }
-        // Else: integer
-        else {
-          const num = parseInt(raw.replace(/[^0-9]/g, ''), 10) || 0;
-          animateValue(el, 0, num, 1800, (v) => v.toLocaleString());
-        }
-
-        numberObserver.unobserve(el);
-      });
-    }, { threshold: 0.4 });
-
-    document.querySelectorAll('.number-display').forEach(el => numberObserver.observe(el));
-
-    // Apply modal
-    function openApplyModal() {
-      const m = document.getElementById('applyModal');
-      m.classList.remove('hidden');
-      m.classList.add('flex');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeApplyModal() {
-      const m = document.getElementById('applyModal');
-      m.classList.add('hidden');
-      m.classList.remove('flex');
-      document.body.style.overflow = '';
-    }
-
-    // Demo submit
-    function fakeSubmit(e) {
-      e.preventDefault();
-      openInfo('Application Saved (Demo)', 'This is a front-end placeholder. Connect this form to your backend, Airtable, Google Form, or submission portal when ready.');
-      closeApplyModal();
-      return false;
-    }
-
-    // Replace with your external form
-    function openExternalForm() {
-      // Example: window.open('https://forms.gle/your-form', '_blank');
-      openInfo('Link Your Real Form', 'Replace openExternalForm() with your Google Form / Typeform / portal URL.');
-    }
-
-    // Impact report download placeholder
-    function downloadImpactReport() {
-      // Example: window.open('/assets/equalspark-impact-report.pdf', '_blank');
-      openInfo('Impact Report', 'Hook this button to your published annual impact report PDF when available.');
-    }
-
-    // Info modal helpers
-    function openInfo(title, body) {
-      document.getElementById('infoTitle').textContent = title;
-      document.getElementById('infoBody').textContent = body;
-      const m = document.getElementById('infoModal');
-      m.classList.remove('hidden');
-      m.classList.add('flex');
-      document.body.style.overflow = 'hidden';
-      lucide.createIcons();
-    }
-    function closeInfoModal() {
-      const m = document.getElementById('infoModal');
-      m.classList.add('hidden');
-      m.classList.remove('flex');
-      document.body.style.overflow = '';
-    }
-
-    function openContactModal() {
-      openInfo('Contact', 'Add your email, contact form, or team page link here.');
-    }
-    function openPartnerModal() {
-      openInfo('Partner With Us', 'Add a partnership interest form and a short overview of collaboration opportunities with schools, universities, and nonprofits.');
-    }
-    function openPolicyModal() {
-      openInfo('Scholarship Policy', 'Winners qualify for up to $1,000 in microgrants. Funds must be used for learning/creation in the chosen field, and parents/guardians must provide receipts for purchases.');
-    }
-
-    // Close modals with Escape
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeApplyModal();
-        closeInfoModal();
+  new Chart(document.getElementById('judgingPie'), {
+    type: 'pie',
+    data: {
+      labels: ['Scientific thinking', 'Creativity', 'Feasibility', 'Impact', 'Clarity'],
+      datasets: [{
+        data: [30, 25, 20, 15, 10],
+        backgroundColor: ['#c9a87c','#9f8a63','#7d6c4d','#5c5039','#3d3526'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { labels: { color: '#e6e2dd' } }
       }
-    });
-  </script>
+    }
+  });
+</script>
+
 </body>
 </html>
